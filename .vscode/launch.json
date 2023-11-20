@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/src/MyApi/bin/Debug/net8.0/MyApi.dll",
+            "program": "${workspaceFolder}/src/MyApi/bin/Debug/net7.0/MyApi.dll",
             "args": [],
             "cwd": "${workspaceFolder}/src/MyApi",
             "stopAtEntry": false,

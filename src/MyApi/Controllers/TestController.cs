@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MyApi.Controllers;
@@ -7,9 +8,23 @@ namespace MyApi.Controllers;
 public class TestController : ControllerBase
 {
     readonly ILogger<TestController> _logger;
-    public TestController(ILogger<TestController> logger)
+    readonly ActivitySource _activitySource;
+    public TestController(ILogger<TestController> logger, ActivitySource activitySource)
     {
         _logger = logger;
+        _activitySource = activitySource;
+    }
+
+    private async Task ExecuteFirstChildActivity()
+    {
+        using var childActivity = _activitySource.StartActivity("FirstChildActivity");
+        await Task.Delay(500);
+    }
+
+    private async Task ExecuteSecondChildActivity()
+    {
+        using var childActivity = _activitySource.StartActivity("SecondChildActivity");
+        await Task.Delay(500);
     }
 
     [HttpGet("log")]
@@ -18,6 +33,37 @@ public class TestController : ControllerBase
         var random = new Random();
         var result = random.Next(1, 6);
         _logger.LogInformation("Anonymous player is rolling the dice: {result}", result);
+        return Ok();
+    }
+
+    [HttpGet("execute/activity")]
+    public async Task<ActionResult> ExecuteActivity()
+    {
+        using var parentActivity = _activitySource.StartActivity("ParentActivity"); // It maybe null if no config opentelemetry
+
+        var random = new Random();
+        var randomNumber = random.Next(1, 6);
+        parentActivity?.SetTag("random.number", randomNumber); // Opentelemetry suggest to use constrant key variable instead
+
+        var eventTags = new Dictionary<string, object?>
+        {
+            { "foo", 1 },
+            { "bar", "Hello, World!" },
+            { "baz", new int[] { 1, 2, 3 } }
+        };
+        parentActivity?.AddEvent(new("Gonna try event!", DateTimeOffset.Now, new(eventTags)));
+
+        // parentActivity?.SetStatus(ActivityStatusCode.Error, "Something bad happened!");
+
+        // ExecuteFirstChildActivity();
+        // await Task.WhenAll(ExecuteFirstChildActivity(), ExecuteSecondChildActivity());
+
+        // var activityContext = Activity.Current!.Context; // Always get latest activity // Get a context from somewhere, perhaps it's passed in as a parameter
+        // var links = new List<ActivityLink>
+        // {
+        //     new(activityContext)
+        // };
+        // using var anotherActivity = _activitySource.StartActivity(ActivityKind.Internal, name: "AnotherActivity", links: links);
         return Ok();
     }
 }
