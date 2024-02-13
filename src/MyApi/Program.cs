@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using OpenTelemetry.Exporter;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -27,10 +28,18 @@ builder.Services.AddOpenTelemetry()
     .WithTracing(tracing => tracing
         // .AddSource(serviceName)
         .AddAspNetCoreInstrumentation()
-        .AddConsoleExporter())
+        .AddHttpClientInstrumentation()
+        .AddOtlpExporter(o =>
+        {
+            o.Endpoint = new Uri("http://localhost:4317"); // Default ไม่ต้องใส่ก็ได้
+        }))
     .WithMetrics(metrics => metrics
         .AddAspNetCoreInstrumentation()
-        .AddConsoleExporter());
+        .AddHttpClientInstrumentation()
+        .AddOtlpExporter(o =>
+        {
+            o.Endpoint = new Uri("http://localhost:4317"); // Default ไม่ต้องใส่ก็ได้
+        }));
 
 builder.Services.AddSingleton(_ => new ActivitySource(serviceName));
 

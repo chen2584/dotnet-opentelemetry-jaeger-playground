@@ -52,9 +52,10 @@ public class TestController : ControllerBase
             { "baz", new int[] { 1, 2, 3 } }
         };
         parentActivity?.AddEvent(new("Gonna try event!", DateTimeOffset.Now, new(eventTags)));
+        parentActivity?.SetStatus(ActivityStatusCode.Error, "Something bad happened!");
 
-        // parentActivity?.SetStatus(ActivityStatusCode.Error, "Something bad happened!");
-
+        using var childActivity = _activitySource.StartActivity("ChildActivity"); // It maybe null if no config opentelemetry
+        childActivity.SetTag("child_tag", 123456789);
         // ExecuteFirstChildActivity();
         // await Task.WhenAll(ExecuteFirstChildActivity(), ExecuteSecondChildActivity());
 
