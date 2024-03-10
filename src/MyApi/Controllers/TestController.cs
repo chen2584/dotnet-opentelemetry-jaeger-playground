@@ -33,6 +33,7 @@ public class TestController : ControllerBase
         var random = new Random();
         var result = random.Next(1, 6);
         _logger.LogInformation("Anonymous player is rolling the dice: {result}", result);
+        throw new Exception("This is a book");
         return Ok();
     }
 
