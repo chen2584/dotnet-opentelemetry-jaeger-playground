@@ -69,7 +69,10 @@ services:
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.95.0
     volumes:
-      - ./docker/otel-collector/config.yaml:/etc/otelcol-contrib/config.yaml
+      - ./config.yaml:/etc/otelcol-contrib/config.yaml
+      - ./docker/otel-collector/ca.pem:/etc/otelcol-contrib/ca.pem
+      - ./docker/otel-collector/server.pem:/etc/otelcol-contrib/server.pem
+      - ./docker/otel-collector/server-key.pem:/etc/otelcol-contrib/server-key.pem
     ports:
       - 1888:1888 # pprof extension
       - 8888:8888 # Prometheus metrics exposed by the Collector
@@ -78,6 +81,48 @@ services:
       - 4317:4317 # OTLP gRPC receiver
       - 4318:4318 # OTLP http receiver
       - 55679:55679 # zpages extension
+    restart: unless-stopped
+    depends_on:
+      - keycloak
+    networks:
+      - elastic-jaeger
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    command: ["start-dev"]
+    restart: unless-stopped
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      - KC_DB=postgres
+      - KC_DB_URL_HOST=keycloak-database
+      - KC_DB_URL_DATABASE=keycloak
+      - KC_DB_USERNAME=postgres
+      - KC_DB_PASSWORD=12345678
+      - KC_DB_POOL_MAX_SIZE=10
+      - KC_HOSTNAME_STRICT=false
+      # - KC_HTTPS_CERTIFICATE_FILE=/opt/keycloak/conf/keycloak-server.cry.pem
+      # - KC_HTTPS_CERTIFICATE_KEY_FILE=/opt/keycloak/conf/keycloak-server.key.pem
+    ports:
+      - 8080:8080
+      - 8443:8443
+    depends_on:
+      - keycloak-database
+    networks:
+      - elastic-jaeger
+    volumes:
+      - ./keycloak-server.cry.pem:/opt/keycloak/conf/keycloak-server.cry.pem
+      - ./keycloak-server.key.pem:/opt/keycloak/conf/keycloak-server.key.pem
+    security_opt:
+      - seccomp:unconfined
+  keycloak-database:
+    image: "postgres"
+    environment:
+      - POSTGRES_PASSWORD=12345678
+    ports:
+      - 5555:5432
+    volumes:
+      - ./docker/postgres/data:/var/lib/postgresql/data/
     networks:
       - elastic-jaeger
 

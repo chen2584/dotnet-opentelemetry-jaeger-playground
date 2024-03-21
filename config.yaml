@@ -1,0 +1,96 @@
+extensions:
+  health_check:
+  oidc:
+    issuer_url: http://keycloak:8080/realms/opentelemetry
+    audience: collector
+    attribute: Authorization
+
+receivers:
+  otlp/auth:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+        auth:
+          authenticator: oidc
+        # tls: # not require
+        #   ca_file: /etc/otelcol-contrib/ca.pem
+        #   cert_file: /etc/otelcol-contrib/server.pem
+        #   key_file: /etc/otelcol-contrib/server-key.pem
+      http:
+        endpoint: 0.0.0.0:4318
+        auth:
+          authenticator: oidc
+        # tls: # not require
+        #   ca_file: /etc/otelcol-contrib/ca.pem
+        #   cert_file: /etc/otelcol-contrib/server.pem
+        #   key_file: /etc/otelcol-contrib/server-key.pem
+
+processors:
+  batch:
+  tail_sampling:
+    decision_wait: 5s
+    num_traces: 100
+    expected_new_traces_per_sec: 10
+    policies:
+      [
+        {
+          name: sampling-all-except-swagger,
+          type: and,
+          and:
+            {
+              and_sub_policy:
+                [
+                  {
+                    name: except-route-name-policy,
+                    type: string_attribute,
+                    string_attribute:
+                      {
+                        key: http.route,
+                        values: [
+                          /swagger/.+,
+                          /weatherforecast
+                        ],
+                        enabled_regex_matching: true,
+                        invert_match: true,
+                      },
+                  },
+                  {
+                    # apply probabilistic sampling
+                    name: probabilistic-policy,
+                    type: probabilistic,
+                    probabilistic: { sampling_percentage: 100 },
+                  },
+                ],
+            },
+        },
+        {
+          name: errors-policy,
+          type: status_code,
+          status_code: { status_codes: [ERROR] },
+        },
+      ]
+  batch/2:
+    send_batch_size: 10000
+    timeout: 10s
+
+exporters:
+  otlp/jaeger: # Jaeger supports OTLP directly
+    endpoint: jaeger-collector:4317
+    tls:
+      insecure: true
+
+service:
+  extensions: [health_check, oidc]
+  pipelines:
+    traces:
+      receivers: [otlp/auth]
+      processors: [tail_sampling, batch]
+      exporters: [otlp/jaeger]
+    # metrics:
+    #   receivers: [otlp]
+    #   processors: [batch]
+    #   exporters: [otlp/jaeger]
+    # logs:
+    #   receivers: [otlp]
+    #   processors: [batch]
+    #   exporters: [otlp/jaeger]

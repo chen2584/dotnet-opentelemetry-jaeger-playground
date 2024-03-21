@@ -3,3 +3,6 @@ obj
 appsettings.Development.json
 
 docker
+*.pem
+
+.docker
