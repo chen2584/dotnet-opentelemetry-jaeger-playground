@@ -1,4 +1,4 @@
-#  aspnet-opentelemetry-playground
+# dotnet-opentelemetry-playground
 
 ### Generate TLS files (Self-Certificate) for Test purpose (Not Required)
 ```
