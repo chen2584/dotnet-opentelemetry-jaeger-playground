@@ -71,13 +71,19 @@ processors:
       ]
   batch/2:
     send_batch_size: 10000
-    timeout: 10s
+    timeout: 3s
 
 exporters:
   otlp/jaeger: # Jaeger supports OTLP directly
     endpoint: jaeger-collector:4317
     tls:
       insecure: true
+  prometheus/metrics:
+    endpoint: 0.0.0.0:8889
+    const_labels:
+      exporter_by: "otel collector"
+    send_timestamps: true
+    metric_expiration: 60m
 
 service:
   extensions: [health_check, oidc]
@@ -86,10 +92,10 @@ service:
       receivers: [otlp/auth]
       processors: [tail_sampling, batch]
       exporters: [otlp/jaeger]
-    # metrics:
-    #   receivers: [otlp]
-    #   processors: [batch]
-    #   exporters: [otlp/jaeger]
+    metrics:
+      receivers: [otlp/auth]
+      # processors: [batch]
+      exporters: [prometheus/metrics]
     # logs:
     #   receivers: [otlp]
     #   processors: [batch]

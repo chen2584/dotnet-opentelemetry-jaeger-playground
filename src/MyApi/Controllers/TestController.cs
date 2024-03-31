@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Diagnostics.Metrics;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MyApi.Controllers;
@@ -9,10 +10,12 @@ public class TestController : ControllerBase
 {
     readonly ILogger<TestController> _logger;
     readonly ActivitySource _activitySource;
-    public TestController(ILogger<TestController> logger, ActivitySource activitySource)
+    readonly IMeterFactory _meterFactory;
+    public TestController(ILogger<TestController> logger, ActivitySource activitySource, IMeterFactory meterFactory)
     {
         _logger = logger;
         _activitySource = activitySource;
+        _meterFactory = meterFactory;
     }
 
     private async Task ExecuteFirstChildActivity()
@@ -66,6 +69,10 @@ public class TestController : ControllerBase
         //     new(activityContext)
         // };
         // using var anotherActivity = _activitySource.StartActivity(ActivityKind.Internal, name: "AnotherActivity", links: links);
+
+        var meter = _meterFactory.Create("TestMeter");
+        var counter = meter.CreateCounter<long>("execute_test_activity");
+        counter.Add(1);
         return Ok();
     }
 }

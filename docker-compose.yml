@@ -84,6 +84,7 @@ services:
     restart: unless-stopped
     depends_on:
       - keycloak
+      - prometheus
     networks:
       - elastic-jaeger
 
@@ -123,6 +124,16 @@ services:
       - 5555:5432
     volumes:
       - ./docker/postgres/data:/var/lib/postgresql/data/
+    networks:
+      - elastic-jaeger
+
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./docker/prometheus/data:/prometheus
     networks:
       - elastic-jaeger
 
