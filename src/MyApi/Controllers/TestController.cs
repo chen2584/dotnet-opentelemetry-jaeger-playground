@@ -75,4 +75,40 @@ public class TestController : ControllerBase
         counter.Add(1);
         return Ok();
     }
+
+    [HttpGet("metric/counter")]
+    public ActionResult TestMetricCounter()
+    {
+        var meter = _meterFactory.Create("TestMeter");
+        var counter = meter.CreateCounter<long>("execute_test_counter", "Requests");
+        counter.Add(1, new KeyValuePair<string, object?>("request-by", "Chenz"));
+        return Ok();
+    }
+
+    [HttpGet("metric/counter/2")]
+    public ActionResult TestMetricCoubterz()
+    {
+        var meter = _meterFactory.Create("TestMeter");
+        var counter = meter.CreateCounter<long>("execute_test_counter", "Requests");
+        counter.Add(1, new KeyValuePair<string, object?>("request-by", "Chen"));
+        return Ok();
+    }
+
+    [HttpGet("metric/updown/counter")]
+    public ActionResult TestMetricUpDown()
+    {
+        var meter = _meterFactory.Create("TestMeter");
+        var counter = meter.CreateUpDownCounter<long>("execute_test_up_down", "Requests");
+        counter.Add(-1, new KeyValuePair<string, object?>("request-by", "Chenz"));
+        return Ok();
+    }
+
+    [HttpGet("metric/histogram")]
+    public ActionResult TestMyHistogram()
+    {
+        var meter = _meterFactory.Create("TestMeter");
+        var counter = meter.CreateHistogram<long>("my_histogram", "Requests", "This is my histogram");
+        counter.Record(1, new KeyValuePair<string, object?>("request-by", "Chenz"));
+        return Ok();
+    }
 }

@@ -15,3 +15,7 @@ curl --location --request POST 'http://keycloak:8080/realms/opentelemetry/protoc
 --data-urlencode 'client_id=collector' \
 --data-urlencode 'client_secret=ThisIsABook'
 ```
+
+### Resources
+Why are Prometheus histograms cumulative?
+https://www.robustperception.io/why-are-prometheus-histograms-cumulative/

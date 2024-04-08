@@ -83,7 +83,7 @@ exporters:
     const_labels:
       exporter_by: "otel collector"
     send_timestamps: true
-    metric_expiration: 60m
+    metric_expiration: 1m # 1 minutes for test purpose
 
 service:
   extensions: [health_check, oidc]
