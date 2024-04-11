@@ -141,6 +141,15 @@ services:
     networks:
       - elastic-jaeger
 
+  grafana:
+    image: grafana/grafana-enterprise:latest
+    ports:
+      - 3000:3000
+    volumes:
+      - ./docker/grafana:/var/lib/grafana
+    networks:
+      - elastic-jaeger
+
 networks:
   elastic-jaeger:
     driver: bridge
