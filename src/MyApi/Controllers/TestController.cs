@@ -111,4 +111,18 @@ public class TestController : ControllerBase
         counter.Record(1, new KeyValuePair<string, object?>("request-by", "Chenz"));
         return Ok();
     }
+
+    [HttpGet("log/information")]
+    public ActionResult LogInformation([FromQuery] string message)
+    {
+        _logger.LogInformation("{message}", message);
+        return Ok();
+    }
+
+    [HttpGet("log/error")]
+    public ActionResult LogError([FromQuery] string message)
+    {
+        _logger.LogError("{message}", message);
+        return Ok();
+    }
 }

@@ -14,6 +14,22 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 const string serviceName = "my-api";
+const string bearerToken = "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJHVXlFWVVBVTZ4S1RzdW5VY3BCRjlpUW5jc240UVYyUVI1M2VjUUNTeUZzIn0.eyJleHAiOjE3MTM1MzY5MDIsImlhdCI6MTcxMzUwMDkxNywianRpIjoiZWQzZTdkNDAtYTNkYS00YzZlLTk0NjEtMzliOTdmZDY2MGI3IiwiaXNzIjoiaHR0cDovL2tleWNsb2FrOjgwODAvcmVhbG1zL29wZW50ZWxlbWV0cnkiLCJhdWQiOlsiY29sbGVjdG9yIiwiYWNjb3VudCJdLCJzdWIiOiI5MWY0OWNiNy1iMWMyLTRkZjEtYWNjOC0yMjYyMzFkOTI5ZjYiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJjb2xsZWN0b3IiLCJhY3IiOiIxIiwiYWxsb3dlZC1vcmlnaW5zIjpbIi8qIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIiwiZGVmYXVsdC1yb2xlcy1vcGVudGVsZW1ldHJ5Il19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwiY2xpZW50SG9zdCI6IjE3Mi4yMi4wLjEiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsInByZWZlcnJlZF91c2VybmFtZSI6InNlcnZpY2UtYWNjb3VudC1jb2xsZWN0b3IiLCJjbGllbnRBZGRyZXNzIjoiMTcyLjIyLjAuMSIsImNsaWVudF9pZCI6ImNvbGxlY3RvciJ9.ORoATUron2U2KPN9iO2fW0VjERHk-NsW3RYQFMtkmFZdq31Tpy22tHK5r0wQPo5hQvmJIz-KyOEkKPKkG5-0Z8B-GB457GGN3m3FyQesaXQigAHC03hCkvwmKoPuT4_Hx35HSo-EJqgzBNlWYpj3iIJ92UWAbUJXLDLoTKQOxF4X9sFpexQHHnA_VMZ-muREbwdL6AWNegL2lkje0FEluMfGv1tnwZbHnyue4w3r198bcfAipNQkU8fjob9FxVvkVv2vTb2MFRHhV1JeRuxIadtJESzj7_S5Sga6k5Vh9v0Grr5FTVYSvgJHjz-7D1qh1saUYXh4HougHeEbJkbLUA";
+
+builder.Logging.AddOpenTelemetry(c => 
+{
+    c.AddOtlpExporter(o =>
+    {
+        o.Endpoint = new Uri("http://localhost:4318/v1/logs"); // Default ไม่ต้องใส่ก็ได้,
+        o.Protocol = OtlpExportProtocol.HttpProtobuf;
+        o.HttpClientFactory = () =>
+        {
+            var client = new HttpClient();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
+            return client;
+        };
+    });
+});
 
 builder.Services.AddOpenTelemetry()
     .ConfigureResource(resource => resource.AddService(serviceName))
@@ -29,7 +45,7 @@ builder.Services.AddOpenTelemetry()
             o.HttpClientFactory = () =>
             {
                 var client = new HttpClient();
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJHVXlFWVVBVTZ4S1RzdW5VY3BCRjlpUW5jc240UVYyUVI1M2VjUUNTeUZzIn0.eyJleHAiOjE3MTI4MTA1MDgsImlhdCI6MTcxMjc3NDUwOSwianRpIjoiMjExY2QzZTYtNmQ0NS00ZmFlLTk4MjUtMjQxNjA1MDRiY2M1IiwiaXNzIjoiaHR0cDovL2tleWNsb2FrOjgwODAvcmVhbG1zL29wZW50ZWxlbWV0cnkiLCJhdWQiOlsiY29sbGVjdG9yIiwiYWNjb3VudCJdLCJzdWIiOiI5MWY0OWNiNy1iMWMyLTRkZjEtYWNjOC0yMjYyMzFkOTI5ZjYiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJjb2xsZWN0b3IiLCJhY3IiOiIxIiwiYWxsb3dlZC1vcmlnaW5zIjpbIi8qIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIiwiZGVmYXVsdC1yb2xlcy1vcGVudGVsZW1ldHJ5Il19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwiY2xpZW50SG9zdCI6IjE3Mi4yOC4wLjEiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsInByZWZlcnJlZF91c2VybmFtZSI6InNlcnZpY2UtYWNjb3VudC1jb2xsZWN0b3IiLCJjbGllbnRBZGRyZXNzIjoiMTcyLjI4LjAuMSIsImNsaWVudF9pZCI6ImNvbGxlY3RvciJ9.VBK1iDVHQvlACYEwk8SCseQhUzwUGUgR4EXULbt-u7JNd3tKr74sivFIO_j4p2Zolxjuicip56itTbyHe3K8a5QiWpBKCvOIkrtypWidelab1vTPZ8XnRGBz3_iytihu1Ohlejxt9htST8hx-sok7ccCwlKOQpfyZ2daABc9gruFkxYHJjAcZKySf_JpI4AJvniQC8op3CNQnrOqYe9FyQZIFxJ4feLe286B7QCMJCinNfA6mLKPihClE0y76XHUyHCTIqWm5CHk0EtLsBiAZEKXSRnegD2k42F4f3IGr5osDdx7ySlcFb8UrTDKDRgQsK_gi2bAbnbqNC2wrG8vzA");
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
                 return client;
             };
         }))
@@ -42,11 +58,11 @@ builder.Services.AddOpenTelemetry()
         {
             otlpExporterOptions.Endpoint = new Uri("http://localhost:4318/v1/metrics"); // Default ไม่ต้องใส่ก็ได้,
             otlpExporterOptions.Protocol = OtlpExportProtocol.HttpProtobuf;
-            metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 1000;
+            metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 10000;
             otlpExporterOptions.HttpClientFactory = () =>
             {
                 var client = new HttpClient();
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", "eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJHVXlFWVVBVTZ4S1RzdW5VY3BCRjlpUW5jc240UVYyUVI1M2VjUUNTeUZzIn0.eyJleHAiOjE3MTI4MTA1MDgsImlhdCI6MTcxMjc3NDUwOSwianRpIjoiMjExY2QzZTYtNmQ0NS00ZmFlLTk4MjUtMjQxNjA1MDRiY2M1IiwiaXNzIjoiaHR0cDovL2tleWNsb2FrOjgwODAvcmVhbG1zL29wZW50ZWxlbWV0cnkiLCJhdWQiOlsiY29sbGVjdG9yIiwiYWNjb3VudCJdLCJzdWIiOiI5MWY0OWNiNy1iMWMyLTRkZjEtYWNjOC0yMjYyMzFkOTI5ZjYiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJjb2xsZWN0b3IiLCJhY3IiOiIxIiwiYWxsb3dlZC1vcmlnaW5zIjpbIi8qIl0sInJlYWxtX2FjY2VzcyI6eyJyb2xlcyI6WyJvZmZsaW5lX2FjY2VzcyIsInVtYV9hdXRob3JpemF0aW9uIiwiZGVmYXVsdC1yb2xlcy1vcGVudGVsZW1ldHJ5Il19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJlbWFpbCBwcm9maWxlIiwiY2xpZW50SG9zdCI6IjE3Mi4yOC4wLjEiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsInByZWZlcnJlZF91c2VybmFtZSI6InNlcnZpY2UtYWNjb3VudC1jb2xsZWN0b3IiLCJjbGllbnRBZGRyZXNzIjoiMTcyLjI4LjAuMSIsImNsaWVudF9pZCI6ImNvbGxlY3RvciJ9.VBK1iDVHQvlACYEwk8SCseQhUzwUGUgR4EXULbt-u7JNd3tKr74sivFIO_j4p2Zolxjuicip56itTbyHe3K8a5QiWpBKCvOIkrtypWidelab1vTPZ8XnRGBz3_iytihu1Ohlejxt9htST8hx-sok7ccCwlKOQpfyZ2daABc9gruFkxYHJjAcZKySf_JpI4AJvniQC8op3CNQnrOqYe9FyQZIFxJ4feLe286B7QCMJCinNfA6mLKPihClE0y76XHUyHCTIqWm5CHk0EtLsBiAZEKXSRnegD2k42F4f3IGr5osDdx7ySlcFb8UrTDKDRgQsK_gi2bAbnbqNC2wrG8vzA");
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", bearerToken);
                 return client;
             };
         }));
